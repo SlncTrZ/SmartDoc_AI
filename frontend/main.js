@@ -30,8 +30,8 @@ function createWindow() {
         icon: path.join(__dirname, '../assets/icon.png'),
     });
 
-    // Load the index.html
-    mainWindow.loadFile(path.join(__dirname, '../public/index.html'));
+    // Load index.html
+    mainWindow.loadFile(path.join(__dirname, 'public/index.html'));
 
     // Open DevTools in development
     if (process.env.NODE_ENV === 'development') {
@@ -43,10 +43,10 @@ function createWindow() {
     });
 }
 
- function startPythonServer() {
-     // Use system Python (venv not created yet for testing)
-     const pythonPath = 'python';
-     const scriptPath = path.join(__dirname, '../../backend/app.py');
+function startPythonServer() {
+    // Use system Python (venv not created yet for testing)
+    const pythonPath = 'python';
+    const scriptPath = path.join(__dirname, '../../backend/app.py');
 
     pythonProcess = spawn(pythonPath, [scriptPath], {
         cwd: path.join(__dirname, '../../backend'),
