@@ -30,13 +30,10 @@
             errDiv.innerHTML += '<div style="margin-bottom:8px;border-left:3px solid #fab387;padding-left:12px"><strong>PROMISE ERROR:</strong> ' + (e.reason || e) + '</div>';
             console.error(e);
         });
-        document.addEventListener('DOMContentLoaded', function() {
-            document.getElementById('root').innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;color:#64748b;font-family:system-ui,sans-serif"><div style="text-align:center"><div style="font-size:48px;margin-bottom:16px">\u23F3</div><div style="font-size:18px;font-weight:600">\u0110ang t\u1EA3i SmartDoc AI...</div><div style="font-size:13px;margin-top:8px;color:#94a3b8">Vui l\u00F2ng ch\u1EDD trong gi\u00E2y l\u00E1t</div></div></div>';
-        });
     </script>
 </head>
 <body>
-    <div id="root"></div>
-    <script src="./app.js" onerror="console.error('FAILED TO LOAD app.js')"></script>
+    <div id="root"><div style="display:flex;align-items:center;justify-content:center;height:100vh;color:#64748b;font-family:system-ui,sans-serif"><div style="text-align:center"><div style="font-size:48px;margin-bottom:16px">{'\u23F3'}</div><div style="font-size:18px;font-weight:600">\u0110ang t\u1EA3i SmartDoc AI...</div><div style="font-size:13px;margin-top:8px;color:#94a3b8">Vui l\u00F2ng ch\u1EDD trong gi\u00E2y l\u00E1t</div></div></div></div>
+    <script src="./app.js" onerror="document.getElementById('root').innerHTML='<div style=display:flex;align-items:center;justify-content:center;height:100vh;background:#1e1e2e;color:#f38ba8;font-family:monospace;padding:40px;font-size:14px>FAILED TO LOAD app.js</div>'"></script>
 </body>
 </html>
