@@ -1,0 +1,31 @@
+"""Backend: Requirements — Python dependencies for SmartDoc AI.
+
+Core libraries for PDF processing, vector storage, and AI integration.
+All packages are local-first and offline-capable.
+
+Wing: smartdoc_backend
+Topic: environment_setup
+Last Updated: 2026-05-05 09:05
+"""
+
+# PDF/DOCX Processing
+docling>=2.0.0  # IBM's document parsing engine
+pypdf>=3.17.0  # Fallback for simple PDFs
+
+# Vector Database
+lancedb>=0.5.0  # Serverless vector DB
+pyarrow>=14.0.0  # Required by LanceDB
+
+# AI Integration
+ollama>=0.1.0  # Local LLM API client
+
+# Web Server (Backend-Frontend communication)
+flask>=3.0.0
+flask-cors>=4.0.0
+
+# Utilities
+python-dotenv>=1.0.0  # Environment variables
+tqdm>=4.66.0  # Progress bars
+
+# Packaging
+pyinstaller>=6.0.0  # Build executable
