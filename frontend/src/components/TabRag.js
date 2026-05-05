@@ -82,17 +82,21 @@ class TabRag extends React.Component {
                 <div className="bg-white border-b border-gray-200 px-6 py-3 flex items-center gap-3 flex-shrink-0">
                     <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">{'\u{1F3F7}\uFE0F'} Lọc:</span>
                     <div className="flex flex-wrap gap-1.5">
-                        {wings.map(wing => (
-                            <button key={wing} onClick={() => this.toggleWing(wing)}
+                        {Array.isArray(wings) && wings.map((wing, idx) => {
+                            const label = typeof wing === 'object' ? (wing.name || wing.id || '') : wing;
+                            const key = typeof wing === 'object' ? (wing.name || wing.id || idx) : wing;
+                            return (
+                            <button key={key} onClick={() => this.toggleWing(wing)}
                                 className={`px-3 py-1 rounded-full text-xs font-medium transition-all ${
                                     selectedWings.includes(wing)
                                         ? 'bg-primary-600 text-white shadow-sm'
                                         : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                                 }`}>
-                                {wing}
+                                {label}
                             </button>
-                        ))}
-                        {wings.length === 0 && (
+                            );
+                        })}
+                        {(!Array.isArray(wings) || wings.length === 0) && (
                             <span className="text-xs text-gray-400 italic">Chưa có loại tài liệu</span>
                         )}
                     </div>

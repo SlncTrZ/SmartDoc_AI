@@ -23,11 +23,11 @@ function bundleReact() {
 
     // Read React UMD source (production minified)
     const reactSrc = fs.readFileSync(
-        path.join(__dirname, 'node_modules/react/umd/react.production.min.js'), 'utf-8');
+        path.join(__dirname, 'node_modules/react/umd/react.development.js'), 'utf-8');
 
     // Read ReactDOM UMD source (production minified)
     const reactDomSrc = fs.readFileSync(
-        path.join(__dirname, 'node_modules/react-dom/umd/react-dom.production.min.js'), 'utf-8');
+        path.join(__dirname, 'node_modules/react-dom/umd/react-dom.development.js'), 'utf-8');
 
     // Read and clean component source
     const componentsContent = readComponents(componentsDir);
