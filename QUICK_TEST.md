@@ -11,21 +11,25 @@ Trước khi test, đảm bảo:
 
 ---
 
-## ⚡ QUICK START (5 phút)
+ ## ⚡ QUICK START (5 phút)
 
-### Bước 1: Start Ollama
+### 🚀 CÁCH 1: One-Click Launcher (Khuyến nghị - Chỉ cần 1 click)
 
-Mở terminal mới và chạy:
+**Double-click file `start.bat` trong thư mục `H:/Develop/SmartDoc_AI/`**
 
-```bash
-ollama serve
-```
+Script sẽ tự động:
+1. ✅ Check và start Ollama (nếu chưa chạy)
+2. ✅ Start Python Backend (port 5000)
+3. ✅ Start Electron Frontend
+4. ✅ Mở ứng dụng
 
-**Giữ terminal này mở!** Ollama cần chạy liên tục.
+**Rất đơn giản!** 🎉
 
 ---
 
-### Bước 2: Check Ollama Models
+### 🔧 CÁCH 2: Manual Start (Để debug)
+
+#### Bước 1: Check Ollama Models
 
 Mở terminal mới và chạy:
 
@@ -46,9 +50,19 @@ ollama pull gemma4:e2b
 ollama pull nomic-embed-text:latest
 ```
 
+#### Bước 2: Start Ollama
+
+Mở terminal mới và chạy:
+
+```bash
+ollama serve
+```
+
+**Giữ terminal này mở!** Ollama cần chạy liên tục.
+
 ---
 
- ### Bước 3: Start Backend
+### Bước 3: Start Backend
 
 **Option A: Tự động (khuyến nghị)**
 - Electron app sẽ tự động start backend khi bạn chạy `npm start`
@@ -84,6 +98,15 @@ npm start
 ```
 
 **Electron window sẽ mở!**
+
+---
+
+### 🛑 Cách Dừng Ứng Dụng
+
+Double-click file `stop.bat` để dừng tất cả:
+- Electron Frontend
+- Python Backend
+- Ollama
 
 ---
 
