@@ -48,8 +48,13 @@ ollama pull nomic-embed-text:latest
 
 ---
 
-### Bước 3: Start Backend
+ ### Bước 3: Start Backend
 
+**Option A: Tự động (khuyến nghị)**
+- Electron app sẽ tự động start backend khi bạn chạy `npm start`
+- Backend sẽ sử dụng system Python (đã cài dependencies)
+
+**Option B: Thủ công (để debug)**
 Mở terminal mới và chạy:
 
 ```bash

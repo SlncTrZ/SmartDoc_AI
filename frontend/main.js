@@ -43,9 +43,10 @@ function createWindow() {
     });
 }
 
-function startPythonServer() {
-    const pythonPath = path.join(__dirname, '../../backend/venv/Scripts/python.exe');
-    const scriptPath = path.join(__dirname, '../../backend/app.py');
+ function startPythonServer() {
+     // Use system Python (venv not created yet for testing)
+     const pythonPath = 'python';
+     const scriptPath = path.join(__dirname, '../../backend/app.py');
 
     pythonProcess = spawn(pythonPath, [scriptPath], {
         cwd: path.join(__dirname, '../../backend'),
