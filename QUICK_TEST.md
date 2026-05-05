@@ -13,17 +13,25 @@ Trước khi test, đảm bảo:
 
  ## ⚡ QUICK START (5 phút)
 
-### 🚀 CÁCH 1: One-Click Launcher (Khuyến nghị - Chỉ cần 1 click)
+### 🚀 CÁCH 1: Advanced One-Click Launcher (Khuyến nghị - Chỉ cần 1 click)
 
 **Double-click file `start.bat` trong thư mục `H:/Develop/SmartDoc_AI/`**
 
 Script sẽ tự động:
-1. ✅ Check và start Ollama (nếu chưa chạy)
-2. ✅ Start Python Backend (port 5000)
-3. ✅ Start Electron Frontend
-4. ✅ Mở ứng dụng
+1. ✅ **Cleanup** - Kill các tiến trình cũ (electron, python backend)
+2. ✅ **Check Dependencies** - Kiểm tra Ollama, Python, Node.js đã cài chưa
+3. ✅ **Auto-Install Models** - Nếu thiếu models → tự động download
+4. ✅ **Start Ollama** - Khởi động ngầm (không hiện cửa sổ)
+5. ✅ **Start Backend** - Khởi động Python server (ngầm)
+6. ✅ **Start Frontend** - Mở Electron app
+7. ✅ **Auto-Cleanup** - Khi đóng app → tự động dừng tất cả services
 
-**Rất đơn giản!** 🎉
+**Tự động hoàn toàn!** 🎉
+
+**Lưu ý:**
+- Script sẽ tự động download models nếu thiếu (lần đầu chạy lâu hơn ~5-10 phút)
+- Ollama và Backend chạy ngầm (không làm phiền)
+- Đóng Electron window → tất cả tự động dừng
 
 ---
 
