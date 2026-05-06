@@ -14,9 +14,8 @@ import logging
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from processor import DocumentProcessor
-from vector_storage import VectorStorage
-from ollama_client import OllamaClient
 from ds2api_client import DS2APIClient
+from bridge_manager import BridgeManager
 from metadata_extractor import MetadataExtractor
 from embedding_service import EmbeddingService
 from rag_pipeline import RAGPipeline
@@ -44,6 +43,7 @@ storage = VectorStorage()
 # Initialize AI clients
 ollama = OllamaClient(model="gemma4:e2b")
 ds2api = DS2APIClient()
+bridge = BridgeManager()
 
 # Chat provider: 'ollama' or 'ds2api'
 chat_provider = "ollama"
@@ -82,15 +82,30 @@ def process_file():
     """Process uploaded file with Gemma 4 multimodal and RAG embedding."""
     data = request.json
     file_path = data.get('file_path')
-    generate_embeddings = data.get('embed', True)  # Default to True
-    generate_images = data.get('images', False)  # Generate images for multimodal AI
+    method = data.get('method', 'local')  # 'cloud' or 'local'
+    generate_embeddings = data.get('embed', True)
+    generate_images = data.get('images', False)
 
     if not file_path or not os.path.exists(file_path):
         return jsonify({'error': 'Invalid file path'}), 400
 
     try:
-        # Process document with optional image generation for Gemma 4
-        result = processor.process_file(file_path, generate_images=generate_images)
+        # Use bridge pipeline for cloud conversion or local processor
+        if method == 'cloud':
+            logger.info(f"Processing via Cloud bridge: {file_path}")
+            bridge_result = bridge.convert_document(file_path, prefer_cloud=True)
+            if bridge_result['success']:
+                result = {
+                    'success': True,
+                    'markdown': bridge_result['markdown'],
+                    'metadata': {'method': bridge_result['method']},
+                    'images': None,
+                }
+            else:
+                logger.warning(f"Cloud bridge failed, falling back to local: {bridge_result.get('error')}")
+                result = processor.process_file(file_path, generate_images=False)
+        else:
+            result = processor.process_file(file_path, generate_images=generate_images)
 
         if not result['success']:
             return jsonify({'error': result['metadata'].get('error', 'Processing failed')}), 500
@@ -187,6 +202,30 @@ def ds2api_models():
     """Get available ds2api models."""
     models = ds2api.get_available_models()
     return jsonify({'models': models})
+
+
+@app.route('/api/bridge/status', methods=['GET'])
+def bridge_status():
+    """Check bridge availability."""
+    return jsonify({
+        'notebooklm': bridge.notebooklm_available(),
+        'docling': bridge.docling_available(),
+    })
+
+
+@app.route('/api/bridge/install', methods=['POST'])
+def bridge_install():
+    """Install NotebookLM bridge."""
+    data = request.json or {}
+    bridge_type = data.get('type', 'notebooklm')
+    try:
+        if bridge_type == 'notebooklm':
+            success = bridge.install_notebooklm()
+            return jsonify({'success': success, 'type': 'notebooklm'})
+        else:
+            return jsonify({'error': 'Invalid bridge type'}), 400
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 
 @app.route('/api/chat/provider', methods=['GET', 'POST'])

@@ -160,6 +160,7 @@ class App extends React.Component {
                     {activeTab === 'input' && React.createElement(TabInput, {
                         onDocumentProcessed: (doc) => this.handleDocumentProcessed(doc),
                         operationMode: operationMode,
+                        key: operationMode,
                     })}
                     {activeTab === 'preview' && React.createElement(TabPreview, {
                         document: currentDocument,
