@@ -134,33 +134,46 @@ def process_file():
         if not result['success']:
             return jsonify({'error': result['metadata'].get('error', 'Processing failed')}), 500
 
-        # Extract metadata using Gemma 4 (with images if available)
+        # Extract metadata (skip if Ollama offline)
         images = result.get('images', None)
-        metadata = metadata_extractor.extract_metadata(result['markdown'], file_path, images=images)
-
-        # Classify wing
-        wing = metadata_extractor.classify_wing(metadata)
+        metadata = {}
+        wing = 'tai_lieu_khac'
+        try:
+            if ollama.is_running():
+                metadata = metadata_extractor.extract_metadata(result['markdown'], file_path, images=images)
+                wing = metadata_extractor.classify_wing(metadata)
+        except Exception as e:
+            logger.warning(f"Metadata extraction skipped (Ollama may be offline): {e}")
+            metadata = {'title': os.path.basename(file_path), 'method': result.get('metadata', {}).get('method', 'pypdf')}
 
         # Create base document data
         import json
-        base_doc_id = f"{os.path.basename(file_path)}_{os.path.getmtime(file_path)}"
+        import time
+        base_doc_id = f"{os.path.basename(file_path)}_{int(time.time())}"
         doc_data = {
             'id': base_doc_id,
             'filename': os.path.basename(file_path),
             'markdown': result['markdown'],
-            'metadata': json.dumps({**result['metadata'], **metadata}),
+            'metadata': json.dumps({**result.get('metadata', {}), **metadata}),
             'embedding': [0.0] * embedding_service.dimension,
             'wing': wing,
-            'created_at': str(os.path.getmtime(file_path))
+            'created_at': str(time.time())
         }
 
         # Store base document
-        storage.add_document(wing, doc_data)
+        try:
+            storage.add_document(wing, doc_data)
+        except Exception as e:
+            logger.warning(f"Storage failed (non-fatal): {e}")
 
         # Generate and store embeddings if requested
         chunks_stored = 0
-        if generate_embeddings:
-            chunks = rag_pipeline.embed_document(result['markdown'])
+        if generate_embeddings and ollama.is_running():
+            try:
+                chunks = rag_pipeline.embed_document(result['markdown'])
+            except Exception as e:
+                logger.warning(f"Embedding generation skipped: {e}")
+                chunks = []
             for i, chunk in enumerate(chunks):
                 chunk_doc = {
                     'id': f"{base_doc_id}_chunk_{i}",
@@ -173,7 +186,7 @@ def process_file():
                     }),
                     'embedding': chunk['embedding'],
                     'wing': wing,
-                    'created_at': str(os.path.getmtime(file_path))
+                    'created_at': str(time.time())
                 }
                 storage.add_document(wing, chunk_doc)
                 chunks_stored += 1
