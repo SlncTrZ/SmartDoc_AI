@@ -15,6 +15,7 @@ class TabPreview extends React.Component {
             aiError: null,
             aiResponse: '',
             customInstruction: '',
+            aiProvider: 'ds2api',
         };
     }
 
@@ -61,7 +62,7 @@ class TabPreview extends React.Component {
     async handleSummarize() {
         this.setState({ aiLoading: true, aiError: null, aiResponse: '' });
         try {
-            const result = await ApiService.summarizeDocument(this.state.selectedDoc.markdown);
+            const result = await ApiService.summarizeDocument(this.state.selectedDoc.markdown, this.state.aiProvider);
             this.setState({ aiResponse: result.summary, aiLoading: false });
         } catch (error) {
             this.setState({ aiError: 'Không thể tóm tắt: ' + error.message, aiLoading: false });
@@ -71,7 +72,7 @@ class TabPreview extends React.Component {
     async handleFormalize() {
         this.setState({ aiLoading: true, aiError: null, aiResponse: '' });
         try {
-            const result = await ApiService.formalizeDocument(this.state.selectedDoc.markdown);
+            const result = await ApiService.formalizeDocument(this.state.selectedDoc.markdown, this.state.aiProvider);
             this.setState({ aiResponse: result.markdown, aiLoading: false });
         } catch (error) {
             this.setState({ aiError: 'Không thể viết lại: ' + error.message, aiLoading: false });
@@ -85,7 +86,7 @@ class TabPreview extends React.Component {
         }
         this.setState({ aiLoading: true, aiError: null, aiResponse: '' });
         try {
-            const result = await ApiService.customRefinement(this.state.selectedDoc.markdown, this.state.customInstruction);
+            const result = await ApiService.customRefinement(this.state.selectedDoc.markdown, this.state.customInstruction, this.state.aiProvider);
             this.setState({ aiResponse: result.markdown, aiLoading: false });
         } catch (error) {
             this.setState({ aiError: 'Không thể thực hiện yêu cầu: ' + error.message, aiLoading: false });
@@ -226,6 +227,18 @@ class TabPreview extends React.Component {
                         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden animate-slide-up">
                             <div className="px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
                                 <h3 className="text-base font-semibold text-gray-800">{'\u{1F916}'} Trợ lý AI</h3>
+                                <div className="flex items-center gap-2 mt-2">
+                                    <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-medium cursor-pointer transition-all ${
+                                        aiProvider === 'ds2api' ? 'bg-violet-100 text-violet-700' : 'bg-gray-100 text-gray-500'
+                                    }`} onClick={() => this.setState({ aiProvider: 'ds2api' })}>
+                                        {'\u{1F310}'} DeepSeek
+                                    </span>
+                                    <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-medium cursor-pointer transition-all ${
+                                        aiProvider === 'ollama' ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-500'
+                                    }`} onClick={() => this.setState({ aiProvider: 'ollama' })}>
+                                        {'\u{1F5A8}'} Ollama
+                                    </span>
+                                </div>
                             </div>
                             <div className="p-6 space-y-4">
                                 {aiError && (

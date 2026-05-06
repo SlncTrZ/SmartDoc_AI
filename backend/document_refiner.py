@@ -30,10 +30,11 @@ class DocumentRefiner:
     def __init__(self, ollama_client: OllamaClient, ds2api_client: Optional[DS2APIClient] = None):
         self.ollama = ollama_client
         self.ds2api = ds2api_client or DS2APIClient()
+        self.provider = 'ds2api'
 
     def _call_ai(self, system_prompt: str, user_prompt: str, max_retry: int = 1) -> Optional[str]:
-        """Try ds2api first, fallback Ollama."""
-        if self.ds2api and self.ds2api.is_available():
+        """Call AI based on selected provider."""
+        if self.provider == 'ds2api' and self.ds2api and self.ds2api.is_available():
             try:
                 messages = [
                     {"role": "system", "content": system_prompt},

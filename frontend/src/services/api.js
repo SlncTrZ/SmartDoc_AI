@@ -127,14 +127,14 @@ class ApiService {
      * Summarize document
      * @param {string} markdown - Document markdown content
      */
-    async summarizeDocument(markdown) {
+    async summarizeDocument(markdown, provider = 'ds2api') {
         try {
             const response = await fetch(`${this.baseUrl}/refine/summarize`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ markdown }),
+                body: JSON.stringify({ markdown, provider }),
             });
 
             const data = await response.json();
@@ -154,14 +154,14 @@ class ApiService {
      * Formalize document
      * @param {string} markdown - Document markdown content
      */
-    async formalizeDocument(markdown) {
+    async formalizeDocument(markdown, provider = 'ds2api') {
         try {
             const response = await fetch(`${this.baseUrl}/refine/formalize`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ markdown }),
+                body: JSON.stringify({ markdown, provider }),
             });
 
             const data = await response.json();
@@ -214,14 +214,14 @@ class ApiService {
         } catch { return { status: 'error' }; }
     }
 
-    async customRefinement(markdown, instruction) {
+    async customRefinement(markdown, instruction, provider = 'ds2api') {
         try {
             const response = await fetch(`${this.baseUrl}/refine/custom`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ markdown, instruction }),
+                body: JSON.stringify({ markdown, instruction, provider }),
             });
 
             const data = await response.json();

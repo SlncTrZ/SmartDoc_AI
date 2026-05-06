@@ -314,9 +314,11 @@ if __name__ == '__main__':
         """Generate summary of document."""
         data = request.json
         markdown = data.get('markdown')
+        provider = data.get('provider', 'ds2api')
         if not markdown:
             return jsonify({'error': 'Markdown content required'}), 400
         try:
+            document_refiner.provider = provider
             summary = document_refiner.summarize(markdown)
             return jsonify({'success': True, 'summary': summary})
         except Exception as e:
@@ -328,9 +330,11 @@ if __name__ == '__main__':
         """Rewrite document in formal tone."""
         data = request.json
         markdown = data.get('markdown')
+        provider = data.get('provider', 'ds2api')
         if not markdown:
             return jsonify({'error': 'Markdown content required'}), 400
         try:
+            document_refiner.provider = provider
             formalized = document_refiner.formalize(markdown)
             return jsonify({'success': True, 'markdown': formalized})
         except Exception as e:
@@ -343,9 +347,11 @@ if __name__ == '__main__':
         data = request.json
         markdown = data.get('markdown')
         instruction = data.get('instruction')
+        provider = data.get('provider', 'ds2api')
         if not markdown or not instruction:
             return jsonify({'error': 'Markdown and instruction required'}), 400
         try:
+            document_refiner.provider = provider
             refined = document_refiner.custom_refinement(markdown, instruction)
             return jsonify({'success': True, 'markdown': refined})
         except Exception as e:
