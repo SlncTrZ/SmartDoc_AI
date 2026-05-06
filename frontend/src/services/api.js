@@ -170,6 +170,38 @@ class ApiService {
      * @param {string} markdown - Document markdown content
      * @param {string} instruction - Custom instruction
      */
+    async getDs2apiStatus() {
+        try {
+            const response = await fetch(`${this.baseUrl}/ds2api/status`);
+            return await response.json();
+        } catch { return { available: false }; }
+    }
+
+    async getDs2apiModels() {
+        try {
+            const response = await fetch(`${this.baseUrl}/ds2api/models`);
+            return await response.json();
+        } catch { return { models: [] }; }
+    }
+
+    async getChatProvider() {
+        try {
+            const response = await fetch(`${this.baseUrl}/chat/provider`);
+            return await response.json();
+        } catch { return { provider: 'ollama' }; }
+    }
+
+    async setChatProvider(provider) {
+        try {
+            const response = await fetch(`${this.baseUrl}/chat/provider`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ provider }),
+            });
+            return await response.json();
+        } catch { return { status: 'error' }; }
+    }
+
     async customRefinement(markdown, instruction) {
         try {
             const response = await fetch(`${this.baseUrl}/refine/custom`, {

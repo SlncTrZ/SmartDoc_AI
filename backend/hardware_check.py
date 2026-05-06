@@ -9,6 +9,7 @@ Updated: 2026-05-06
 """
 
 import json
+import os
 import sys
 import platform
 
@@ -102,7 +103,7 @@ def check_system():
         "os_version": platform.version(),
         "architecture": platform.machine(),
         "processor": platform.processor(),
-        "cpu_count": int(platform.processor() or 0) or None,
+        "cpu_count": os.cpu_count(),
         "ram_total_gb": None,
     }
 

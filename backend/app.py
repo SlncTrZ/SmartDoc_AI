@@ -16,6 +16,7 @@ from flask_cors import CORS
 from processor import DocumentProcessor
 from vector_storage import VectorStorage
 from ollama_client import OllamaClient
+from ds2api_client import DS2APIClient
 from metadata_extractor import MetadataExtractor
 from embedding_service import EmbeddingService
 from rag_pipeline import RAGPipeline
@@ -40,8 +41,12 @@ CORS(app)  # Enable CORS for Electron frontend
 processor = DocumentProcessor()
 storage = VectorStorage()
 
-# Initialize Ollama with Gemma 4
+# Initialize AI clients
 ollama = OllamaClient(model="gemma4:e2b")
+ds2api = DS2APIClient()
+
+# Chat provider: 'ollama' or 'ds2api'
+chat_provider = "ollama"
 
 # Initialize other services
 metadata_extractor = MetadataExtractor(ollama)
@@ -49,7 +54,7 @@ document_refiner = DocumentRefiner(ollama)
 
 # Initialize embedding service with nomic-embed-text (768 dimensions)
 embedding_service = EmbeddingService(model="nomic-embed-text")
-rag_pipeline = RAGPipeline(embedding_service, storage, ollama)
+rag_pipeline = RAGPipeline(embedding_service, storage, ollama, ds2api)
 
 # Ensure database wings exist
 storage.ensure_wings()
@@ -168,6 +173,35 @@ def list_models():
     """Get available Ollama models."""
     models = ollama.list_models()
     return jsonify({'models': models})
+
+
+@app.route('/api/ds2api/status', methods=['GET'])
+def ds2api_status():
+    """Check if ds2api service is available."""
+    available = ds2api.is_available()
+    return jsonify({'available': available})
+
+
+@app.route('/api/ds2api/models', methods=['GET'])
+def ds2api_models():
+    """Get available ds2api models."""
+    models = ds2api.get_available_models()
+    return jsonify({'models': models})
+
+
+@app.route('/api/chat/provider', methods=['GET', 'POST'])
+def chat_provider():
+    """Get or set the chat provider (ollama/ds2api)."""
+    global chat_provider
+    if request.method == 'POST':
+        data = request.json
+        provider = data.get('provider', 'ollama')
+        if provider in ('ollama', 'ds2api'):
+            chat_provider = provider
+            rag_pipeline.provider = provider
+            return jsonify({'provider': chat_provider, 'status': 'ok'})
+        return jsonify({'error': 'Invalid provider'}), 400
+    return jsonify({'provider': chat_provider})
 
 
 @app.route('/api/chat', methods=['POST'])

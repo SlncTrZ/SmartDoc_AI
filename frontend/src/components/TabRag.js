@@ -11,16 +11,26 @@ class TabRag extends React.Component {
             selectedWings: [],
             wings: [],
             error: null,
+            ds2apiAvailable: false,
+            chatProvider: 'ollama',
         };
         this.messagesEndRef = React.createRef();
     }
 
     async componentDidMount() {
         try {
-            const wings = await ApiService.getWings();
-            this.setState({ wings });
+            const [wings, ds2apiStatus, provider] = await Promise.all([
+                ApiService.getWings(),
+                ApiService.getDs2apiStatus(),
+                ApiService.getChatProvider(),
+            ]);
+            this.setState({
+                wings,
+                ds2apiAvailable: ds2apiStatus.available,
+                chatProvider: provider.provider,
+            });
         } catch (error) {
-            console.error('Failed to load wings:', error);
+            console.error('Failed to load initial data:', error);
         }
     }
 
@@ -75,12 +85,32 @@ class TabRag extends React.Component {
     dismissError() { this.setState({ error: null }); }
 
     render() {
-        const { messages, inputMessage, loading, wings, selectedWings, error } = this.state;
+        const { messages, inputMessage, loading, wings, selectedWings, error, ds2apiAvailable, chatProvider } = this.state;
 
         return (
             <div className="flex flex-col h-full bg-gray-50/50">
-                <div className="bg-white border-b border-gray-200 px-6 py-3 flex items-center gap-3 flex-shrink-0">
-                    <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">{'\u{1F3F7}\uFE0F'} Lọc:</span>
+                <div className="bg-white border-b border-gray-200 px-6 py-2 flex items-center gap-3 flex-shrink-0 flex-wrap">
+                    <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">AI:</span>
+                    <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${
+                        chatProvider === 'ds2api'
+                            ? 'bg-violet-100 text-violet-700'
+                            : 'bg-emerald-100 text-emerald-700'
+                    }`}>
+                        {chatProvider === 'ds2api' ? '\u{1F310} ds2api' : '\u{1F5A8} Ollama'}
+                    </span>
+                    {ds2apiAvailable && chatProvider === 'ollama' && (
+                        <button onClick={async () => {
+                            await ApiService.setChatProvider('ds2api');
+                            this.setState({ chatProvider: 'ds2api' });
+                        }} className="text-[10px] text-violet-500 hover:text-violet-700 underline">Chuy\u1EC3n sang ds2api</button>
+                    )}
+                    {chatProvider === 'ds2api' && (
+                        <button onClick={async () => {
+                            await ApiService.setChatProvider('ollama');
+                            this.setState({ chatProvider: 'ollama' });
+                        }} className="text-[10px] text-emerald-500 hover:text-emerald-700 underline">Chuy\u1EC3n sang Ollama</button>
+                    )}
+                    <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider ml-2">{'\u{1F3F7}\uFE0F'} Lọc:</span>
                     <div className="flex flex-wrap gap-1.5">
                         {Array.isArray(wings) && wings.map((wing, idx) => {
                             const label = typeof wing === 'object' ? (wing.name || wing.id || '') : wing;

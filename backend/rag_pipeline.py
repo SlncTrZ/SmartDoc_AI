@@ -1,17 +1,18 @@
 """Backend: RAG Pipeline — Retrieval-Augmented Generation.
 
 Combines semantic search with AI generation.
-Retrieves relevant documents and generates context-aware responses.
+Supports dual providers: Ollama (local) + ds2api (DeepSeek web).
 
 Wing: smartdoc_backend
 Topic: rag_implementation
-Last Updated: 2026-05-05 09:50
+Updated: 2026-05-06
 """
 
 from typing import List, Dict, Any, Optional
 from embedding_service import EmbeddingService
 from vector_storage import VectorStorage
 from ollama_client import OllamaClient
+from ds2api_client import DS2APIClient
 
 
 class RAGPipeline:
@@ -20,17 +21,21 @@ class RAGPipeline:
     def __init__(self,
                  embedding_service: EmbeddingService,
                  storage: VectorStorage,
-                 ollama_client: OllamaClient):
+                 ollama_client: OllamaClient,
+                 ds2api_client: Optional[DS2APIClient] = None):
         """Initialize RAG pipeline.
 
         Args:
             embedding_service: Embedding generation service
             storage: Vector database
-            ollama_client: AI client
+            ollama_client: AI client (local Ollama)
+            ds2api_client: Optional ds2api client (cloud DeepSeek)
         """
         self.embedding_service = embedding_service
         self.storage = storage
         self.ollama_client = ollama_client
+        self.ds2api_client = ds2api_client or DS2APIClient()
+        self.provider = "ollama"  # default
 
     def retrieve(self, query: str, wings: Optional[List[str]] = None, limit: int = 5) -> List[Dict]:
         """Retrieve relevant documents for a query.
@@ -94,7 +99,19 @@ Reference documents:
 Answer the question based on the information in the documents. If information is not found, state clearly.
 Answer in Vietnamese, keep it concise and easy to understand."""
 
-        # Generate response
+        # Generate response (try ds2api first if available, fallback to Ollama)
+        if self.provider == "ds2api" and self.ds2api_client and self.ds2api_client.is_available():
+            try:
+                messages = [
+                    {"role": "system", "content": "You are a helpful AI assistant. Answer based on the reference documents."},
+                    {"role": "user", "content": prompt}
+                ]
+                result = self.ds2api_client.chat(messages)
+                if result:
+                    return result
+            except Exception as e:
+                print(f"[RAG] ds2api error, falling back to Ollama: {e}")
+
         try:
             response = self.ollama_client.chat(prompt=prompt)
 
