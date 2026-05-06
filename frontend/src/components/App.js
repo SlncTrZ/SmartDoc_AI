@@ -11,7 +11,6 @@ class App extends React.Component {
         this.state = {
             showSplash: true,
             hardwareInfo: null,
-            operationMode: 'hybrid',
             activeTab: 'input',
             backendStatus: 'checking',
             ollamaRunning: false,
@@ -23,8 +22,6 @@ class App extends React.Component {
     }
 
     async handleSplashComplete(hwInfo) {
-        const mode = hwInfo?.gpu?.recommended_mode === 'local' ? 'local' : 'hybrid';
-
         if (window.electronAPI && window.electronAPI.getBackendPort) {
             try {
                 const port = await window.electronAPI.getBackendPort();
@@ -32,11 +29,7 @@ class App extends React.Component {
             } catch {}
         }
 
-        this.setState({
-            showSplash: false,
-            hardwareInfo: hwInfo,
-            operationMode: mode,
-        });
+        this.setState({ showSplash: false, hardwareInfo: hwInfo });
     }
 
     checkBackend() {
@@ -93,13 +86,16 @@ class App extends React.Component {
             });
         }
 
-        const { activeTab, backendStatus, ollamaRunning, documents, currentDocument, notification, loading, operationMode, hardwareInfo } = this.state;
+        const { activeTab, backendStatus, ollamaRunning, documents, currentDocument, notification, loading, hardwareInfo } = this.state;
 
         const tabs = [
             { key: 'input', label: 'Tiếp nhận & Quét', icon: '\u{1F4E5}', shortcut: '1' },
             { key: 'preview', label: 'Kiểm duyệt & Chỉnh sửa', icon: '\u{1F4DD}', shortcut: '2' },
             { key: 'rag', label: 'Tra cứu & Hỏi đáp', icon: '\u{1F4AC}', shortcut: '3' },
         ];
+
+        const gpuName = hardwareInfo?.gpu?.gpu_name;
+        const gpuDetected = hardwareInfo?.gpu?.gpu_detected;
 
         return (
             <div className="flex flex-col h-screen bg-background text-gray-900 font-sans antialiased">
@@ -111,19 +107,15 @@ class App extends React.Component {
                             </div>
                             <div>
                                 <h1 className="text-base font-semibold">SmartDoc AI</h1>
-                                <p className="text-[10px] text-slate-400 -mt-0.5">
-                                    Chế độ: {operationMode === 'local' ? 'Local \u{1F510}' : 'Hybrid \u2601\uFE0F'}
-                                </p>
+                                <p className="text-[10px] text-slate-400 -mt-0.5">Phần mềm quản lý tài liệu thông minh</p>
                             </div>
                         </div>
                         <div className="flex items-center gap-2">
-                            <span className={`text-[10px] px-2 py-0.5 rounded-full ${
-                                operationMode === 'local'
-                                    ? 'bg-emerald-500/20 text-emerald-300'
-                                    : 'bg-amber-500/20 text-amber-300'
-                            }`}>
-                                {operationMode === 'local' ? 'GPU: ' + (hardwareInfo?.gpu?.gpu_name || 'Local') : 'Hybrid Mode'}
-                            </span>
+                            {gpuDetected && (
+                                <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300">
+                                    {'\u{1F5A5}\uFE0F'} {gpuName}
+                                </span>
+                            )}
                             <span className={`w-1.5 h-1.5 rounded-full ${backendStatus === 'healthy' ? 'bg-emerald-400' : 'bg-red-400'}`} />
                         </div>
                     </div>
@@ -172,7 +164,7 @@ class App extends React.Component {
 
                 <footer className="bg-white border-t border-gray-200 px-6 py-1.5 text-[10px] text-gray-400 flex items-center justify-between flex-shrink-0">
                     <span>{'\u{1F4C4}'} {documents.length} tài liệu</span>
-                    <span>SmartDoc AI v2.0 \u2022 Mode: {operationMode}</span>
+                    <span>SmartDoc AI v2.0</span>
                 </footer>
             </div>
         );
