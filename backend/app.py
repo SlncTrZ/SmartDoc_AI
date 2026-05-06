@@ -14,6 +14,8 @@ import logging
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from processor import DocumentProcessor
+from vector_storage import VectorStorage
+from ollama_client import OllamaClient
 from ds2api_client import DS2APIClient
 from bridge_manager import BridgeManager
 from metadata_extractor import MetadataExtractor
