@@ -202,11 +202,15 @@ async function startBackend() {
     backendPort = await sidecar.findFreePort(5000);
     console.log(`[Main] Starting Flask backend on port ${backendPort}...`);
     try {
-        await sidecar.start('flask-backend', 'app.py', {
+        const ready = await sidecar.start('flask-backend', 'app.py', {
             port: backendPort,
             args: ['--port', String(backendPort)],
         });
-        console.log('[Main] Flask backend ready on port', backendPort);
+        if (ready) {
+            console.log('[Main] Flask backend ready on port', backendPort);
+        } else {
+            console.warn('[Main] Flask backend may still be loading (port timeout)');
+        }
     } catch (error) {
         console.error('[Main] Failed to start Flask backend:', error.message);
     }

@@ -86,7 +86,8 @@ class SidecarManager {
         this.processes.set(name, entry);
 
         if (port) {
-            await this.waitForPort(port, 15000);
+            const timeout = port === 5000 ? 30000 : 15000;
+            await this.waitForPort(port, timeout);
         }
 
         return child;
