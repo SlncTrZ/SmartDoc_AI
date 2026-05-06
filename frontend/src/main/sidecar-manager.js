@@ -173,6 +173,23 @@ class SidecarManager {
         }
     }
 
+    findFreePort(preferred = 5000) {
+        return new Promise((resolve, reject) => {
+            const server = require('net').createServer();
+            server.listen(preferred, '127.0.0.1', () => {
+                const port = server.address().port;
+                server.close(() => resolve(port));
+            });
+            server.on('error', () => {
+                const server2 = require('net').createServer();
+                server2.listen(0, '127.0.0.1', () => {
+                    const port = server2.address().port;
+                    server2.close(() => resolve(port));
+                });
+            });
+        });
+    }
+
     async runOnce(name, script, { args = [], cwd } = {}) {
         const procCwd = cwd || this.getBackendDir();
         const scriptPath = path.join(this.getBackendDir(), script);

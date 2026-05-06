@@ -9,15 +9,23 @@
  * Last Updated: 2026-05-05 09:45
  */
 
-const API_BASE_URL = 'http://127.0.0.1:5000/api';
+let API_PORT = 5000;
 
 class ApiService {
+    get baseUrl() {
+        return `http://127.0.0.1:${API_PORT}/api`;
+    }
+
+    setPort(port) {
+        API_PORT = port;
+    }
+
     /**
      * Check backend health status
      */
     async checkHealth() {
         try {
-            const response = await fetch(`${API_BASE_URL}/health`);
+            const response = await fetch(`${this.baseUrl}/health`);
             return await response.json();
         } catch (error) {
             console.error('Health check failed:', error);
@@ -31,7 +39,7 @@ class ApiService {
      */
     async processFile(filePath) {
         try {
-            const response = await fetch(`${API_BASE_URL}/process`, {
+            const response = await fetch(`${this.baseUrl}/process`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -57,7 +65,7 @@ class ApiService {
      */
     async getWings() {
         try {
-            const response = await fetch(`${API_BASE_URL}/wings`);
+            const response = await fetch(`${this.baseUrl}/wings`);
             return await response.json();
         } catch (error) {
             console.error('Failed to get wings:', error);
@@ -70,7 +78,7 @@ class ApiService {
      */
     async startOllama() {
         try {
-            const response = await fetch(`${API_BASE_URL}/ollama/start`, {
+            const response = await fetch(`${this.baseUrl}/ollama/start`, {
                 method: 'POST',
             });
             return await response.json();
@@ -88,7 +96,7 @@ class ApiService {
      */
     async chat(message, context = [], wings = []) {
         try {
-            const response = await fetch(`${API_BASE_URL}/chat`, {
+            const response = await fetch(`${this.baseUrl}/chat`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -109,7 +117,7 @@ class ApiService {
      */
     async summarizeDocument(markdown) {
         try {
-            const response = await fetch(`${API_BASE_URL}/refine/summarize`, {
+            const response = await fetch(`${this.baseUrl}/refine/summarize`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -136,7 +144,7 @@ class ApiService {
      */
     async formalizeDocument(markdown) {
         try {
-            const response = await fetch(`${API_BASE_URL}/refine/formalize`, {
+            const response = await fetch(`${this.baseUrl}/refine/formalize`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -164,7 +172,7 @@ class ApiService {
      */
     async customRefinement(markdown, instruction) {
         try {
-            const response = await fetch(`${API_BASE_URL}/refine/custom`, {
+            const response = await fetch(`${this.baseUrl}/refine/custom`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

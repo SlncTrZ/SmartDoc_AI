@@ -2,6 +2,7 @@
  * Frontend: Electron Main Process — Entry point for Electron app.
  *
  * Creates main window, manages sidecar processes.
+ * Dynamic port allocation to avoid conflicts.
  *
  * Wing: smartdoc_frontend
  * Topic: electron_main
@@ -14,8 +15,7 @@ const SidecarManager = require('./src/main/sidecar-manager');
 
 let mainWindow = null;
 let sidecar = null;
-
-const FLASK_PORT = 5000;
+let backendPort = null;
 
 function createWindow() {
     mainWindow = new BrowserWindow({
@@ -49,7 +49,8 @@ function createWindow() {
 function setupSidecar() {
     sidecar = new SidecarManager();
 
-    // IPC: Check hardware
+    ipcMain.handle('get-backend-port', () => backendPort);
+
     ipcMain.handle('hardware-check', async () => {
         try {
             const output = await sidecar.runOnce('hardware-check', 'hardware_check.py');
@@ -90,27 +91,31 @@ function setupSidecar() {
 }
 
 async function startBackend() {
-    console.log('[Main] Starting Flask backend...');
+    backendPort = await sidecar.findFreePort(5000);
+    console.log(`[Main] Starting Flask backend on port ${backendPort}...`);
     try {
         await sidecar.start('flask-backend', 'app.py', {
-            port: FLASK_PORT,
+            port: backendPort,
+            args: ['--port', String(backendPort)],
         });
-        console.log('[Main] Flask backend ready on port', FLASK_PORT);
+        console.log('[Main] Flask backend ready on port', backendPort);
     } catch (error) {
         console.error('[Main] Failed to start Flask backend:', error.message);
     }
 }
 
-app.whenReady().then(async () => {
+async function initApp() {
     setupSidecar();
     await startBackend();
     createWindow();
+}
 
-    app.on('activate', () => {
-        if (BrowserWindow.getAllWindows().length === 0) {
-            createWindow();
-        }
-    });
+app.whenReady().then(initApp);
+
+app.on('activate', () => {
+    if (BrowserWindow.getAllWindows().length === 0) {
+        initApp();
+    }
 });
 
 app.on('window-all-closed', () => {
@@ -120,7 +125,5 @@ app.on('window-all-closed', () => {
 });
 
 app.on('before-quit', () => {
-    if (sidecar) {
-        sidecar.stopAll();
-    }
+    if (sidecar) sidecar.stopAll();
 });

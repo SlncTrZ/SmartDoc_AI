@@ -1,7 +1,7 @@
 /**
  * Frontend: Preload Script — Expose safe APIs to renderer process.
  *
- * Provides IPC bridge for sidecar management, file dialogs.
+ * Provides IPC bridge for sidecar management, file dialogs, dynamic ports.
  *
  * Wing: smartdoc_frontend
  * Topic: electron_security
@@ -13,10 +13,8 @@ const { contextBridge, ipcRenderer } = require('electron');
 contextBridge.exposeInMainWorld('electronAPI', {
     openFileDialog: () => ipcRenderer.invoke('open-file-dialog'),
     hardwareCheck: () => ipcRenderer.invoke('hardware-check'),
+    getBackendPort: () => ipcRenderer.invoke('get-backend-port'),
     getSidecarStatus: () => ipcRenderer.invoke('sidecar-status'),
     sidecarHealth: (name) => ipcRenderer.invoke('sidecar-health', name),
     sidecarStop: (name) => ipcRenderer.invoke('sidecar-stop', name),
-    onHardwareCheckResult: (callback) => {
-        ipcRenderer.on('hardware-check-result', (_event, data) => callback(data));
-    },
 });

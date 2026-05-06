@@ -22,8 +22,16 @@ class App extends React.Component {
         };
     }
 
-    handleSplashComplete(hwInfo) {
+    async handleSplashComplete(hwInfo) {
         const mode = hwInfo?.gpu?.recommended_mode === 'local' ? 'local' : 'hybrid';
+
+        if (window.electronAPI && window.electronAPI.getBackendPort) {
+            try {
+                const port = await window.electronAPI.getBackendPort();
+                if (port) ApiService.setPort(port);
+            } catch {}
+        }
+
         this.setState({
             showSplash: false,
             hardwareInfo: hwInfo,

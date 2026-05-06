@@ -8,6 +8,9 @@ Topic: api_server
 Last Updated: 2026-05-05 09:05
 """
 
+import argparse
+import os
+import logging
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from processor import DocumentProcessor
@@ -17,8 +20,6 @@ from metadata_extractor import MetadataExtractor
 from embedding_service import EmbeddingService
 from rag_pipeline import RAGPipeline
 from document_refiner import DocumentRefiner
-import os
-import logging
 
 # Configure logging
 logging.basicConfig(
@@ -276,6 +277,9 @@ if __name__ == '__main__':
 
     logger.info("Refinement endpoints loaded")
 
-    # Start Flask server
-    logger.info("Starting Flask server on port 5000...")
-    app.run(host='127.0.0.1', port=5000, debug=False)
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--port', type=int, default=5000, help='Port to listen on')
+    args = parser.parse_args()
+    port = args.port
+    logger.info(f"Starting Flask server on port {port}...")
+    app.run(host='127.0.0.1', port=port, debug=False)
