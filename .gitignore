@@ -80,6 +80,9 @@ backend/test_output_*.txt
 *.bak
 *.backup
 
+# AI Agent instructions
+AGENTS.md
+
 # Build artifacts
 frontend/public/app.js
 frontend/public/*.map
