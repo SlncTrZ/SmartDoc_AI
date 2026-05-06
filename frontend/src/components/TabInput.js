@@ -1,5 +1,4 @@
 const React = require('react');
-const UploadZone = require('./UploadZone').default;
 
 class TabInput extends React.Component {
     constructor(props) {
@@ -14,13 +13,12 @@ class TabInput extends React.Component {
     }
 
     render() {
-        return (
-            <UploadZone
-                operationMode={this.state.mode}
-                onModeToggle={(m) => this.handleModeToggle(m)}
-                onDocumentProcessed={this.props.onDocumentProcessed}
-            />
-        );
+        const UploadZone = window.UploadZoneComponent;
+        return UploadZone ? React.createElement(UploadZone, {
+            operationMode: this.state.mode,
+            onModeToggle: (m) => this.handleModeToggle(m),
+            onDocumentProcessed: this.props.onDocumentProcessed,
+        }) : null;
     }
 }
 
