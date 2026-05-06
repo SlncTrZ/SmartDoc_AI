@@ -1,37 +1,34 @@
-﻿# PROJECT PORTFOLIO: SmartDoc AI (Hybrid + Sidecar Edition)
+﻿# PROJECT PORTFOLIO: SmartDoc AI (Cloud-First Edition)
 
 ## 1. Giới thiệu
-SmartDoc AI - giải pháp quản trị tri thức nội bộ cho doanh nghiệp.
-Adaptive AI, tự động điều chỉnh luồng xử lý dựa trên phần cứng người dùng.
-Chạy tốt trên cả máy tính văn phòng không GPU lẫn máy trạm cao cấp.
+SmartDoc AI — giải pháp quản trị tri thức nội bộ cho doanh nghiệp.
+Cloud-First Hybrid: ưu tiên xử lý qua Cloud (DeepSeek + NotebookLM), fallback local.
+Chạy trên mọi cấu hình máy tính văn phòng.
 
 ## 2. Vấn đề giải quyết
-- Phần cứng không đồng nhất: Máy văn phòng thường không GPU.
-- Chi phí API: Giải pháp Cloud chính thống tốn kém.
-- Bảo mật & Tiện ích: Cân bằng giữa Local (bảo mật) và Cloud (sức mạnh AI).
-- Rào cản số lượng: Document processing không giới hạn nhờ notebookLM.
+- **Phần cứng yếu:** Máy văn phòng không GPU → dùng Cloud AI
+- **Chi phí API:** Tận dụng DeepSeek + NotebookLM miễn phí
+- **Bảo mật:** Local fallback khi cần, không bắt buộc Cloud
+- **Số lượng lớn:** Xử lý không giới hạn nhờ Cloud
 
-## 3. Kiến trúc
-Sidecar Architecture: Mọi AI service chạy local cùng Electron.
+## 3. Tính năng
+| Tính năng | Mô tả |
+|-----------|-------|
+| 3-mode Upload | Nhanh (pypdf), Cloud (NotebookLM), Nâng cao (Docling) |
+| AI Chat | RAG với LanceDB + DeepSeek/Ollama |
+| AI Assistant | Tóm tắt, viết lại, yêu cầu tùy chỉnh |
+| Splash Screen | Nhập Tên/Chức vụ, phát hiện GPU |
+| WebView Login | DeepSeek + Google (lưu session) |
+| Huỷ xử lý | Cancel button + AbortController |
 
-| Kênh | Công nghệ | Khi nào dùng |
-|------|-----------|-------------|
-| Hardware Check | GPUtil (Python) | Splash Screen đầu tiên |
-| LLM Chat | ds2api (Python) -> DeepSeek | Luôn dùng (Hybrid) |
-| Document Standardizer | notebookLM-mcp + Chromium | Có internet |
-| Document Fallback | Docling + Model weights | Offline / notebookLM lỗi |
-| Vector DB | LanceDB | Local storage |
-| Local LLM | Ollama | GPU >= 6GB |
-
-## 4. Tính năng nổi bật
-- Hardware Setup Wizard: Auto-detect GPU/VRAM -> đề xuất chế độ
-- ds2api Integration: DeepSeek free qua tài khoản cá nhân
-- Cloud Standardizer: NotebookLM -> .md -> LanceDB
-- Docling Fallback: OCR local khi offline
-- On-demand Weights: Chỉ tải model 2GB khi cần Local Mode
+## 4. Kiến trúc
+- Frontend: Electron 30 + React 18 + Tailwind CSS
+- Backend: Python Flask + LanceDB (vector DB)
+- AI: DeepSeek Web (ds2api) + Ollama (Gemma4)
+- Document: pypdf (text) → RapidOCR (scan) → Docling (layout)
 
 ## 5. Kết quả mong đợi
 - 100% tương thích mọi cấu hình văn phòng
-- Giảm ~90% chi phí API AI
-- Xử lý không giới hạn số lượng tài liệu
-- Một .exe duy nhất, người dùng chỉ cần cài và chạy
+- Giảm ~90% chi phí AI nhờ DeepSeek miễn phí
+- Xử lý tài liệu không giới hạn
+- Một .exe duy nhất, click để chạy
