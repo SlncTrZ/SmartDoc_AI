@@ -50,7 +50,7 @@ ds2api = DS2APIClient()
 bridge = BridgeManager()
 
 # Chat provider: 'ollama' or 'ds2api'
-chat_provider = "ollama"
+chat_provider = "ds2api"
 
 # Cancel tracking for long-running processes
 cancel_requests = {}

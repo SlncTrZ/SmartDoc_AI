@@ -11,7 +11,7 @@ class TabRag extends React.Component {
             selectedWings: [],
             wings: [],
             ds2apiAvailable: false,
-            chatProvider: 'ollama',
+            chatProvider: 'ds2api',
             ds2apiLoggedIn: false,
             error: null,
         };
