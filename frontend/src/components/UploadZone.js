@@ -1,6 +1,12 @@
 const React = require('react');
 const ApiService = require('../services/api').default;
 
+const MODE_CONFIG = {
+    auto: { icon: '\u26A1', label: 'Nhanh (Auto)', method: 'local' },
+    cloud: { icon: '\u2601\uFE0F', label: 'Cloud (NotebookLM)', method: 'cloud' },
+    enhanced: { icon: '\u{1F52C}', label: 'Nâng cao (Docling)', method: 'enhanced' },
+};
+
 class UploadZone extends React.Component {
     constructor(props) {
         super(props);
@@ -79,8 +85,8 @@ class UploadZone extends React.Component {
             try {
                 const filePath = file.path || file.name;
                 const activeMode = this.state.mode;
-                const apiMethod = modeConfig[activeMode]?.method || 'local';
-                const label = modeConfig[activeMode]?.label || 'Local';
+                const apiMethod = MODE_CONFIG[activeMode]?.method || 'local';
+                const label = MODE_CONFIG[activeMode]?.label || 'Local';
                 this.setState({ status: `${i + 1}/${pdfFiles.length}: ${label}...` });
 
                 const result = await ApiService.processFile(
@@ -134,12 +140,7 @@ class UploadZone extends React.Component {
     render() {
         const { isDragging, mode, files, processing, progress, status, error, processedFiles, showLogin, googleLoggedIn } = this.state;
 
-        const modeConfig = {
-            auto: { icon: '\u26A1', label: 'Nhanh (Auto)', method: 'local' },
-            cloud: { icon: '\u2601\uFE0F', label: 'Cloud (NotebookLM)', method: 'cloud' },
-            enhanced: { icon: '\u{1F52C}', label: 'Nâng cao (Docling)', method: 'enhanced' },
-        };
-        const current = modeConfig[mode] || modeConfig.auto;
+        const current = MODE_CONFIG[mode] || MODE_CONFIG.auto;
 
         return (
             <div className="p-8 max-w-3xl mx-auto animate-fade-in">
@@ -168,7 +169,7 @@ class UploadZone extends React.Component {
                 {this.props.onModeToggle && (
                     <div className="mb-4 flex flex-wrap items-center gap-2 p-3 bg-gray-50 rounded-xl border border-gray-200">
                         <span className="text-sm text-gray-600">{'\u2699\uFE0F'} Phương thức:</span>
-                        {Object.entries(modeConfig).map(([key, cfg]) => (
+                        {Object.entries(MODE_CONFIG).map(([key, cfg]) => (
                             <button key={key} onClick={() => this.props.onModeToggle(key)}
                                 className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
                                     mode === key
