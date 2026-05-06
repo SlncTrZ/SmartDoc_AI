@@ -311,6 +311,8 @@ if __name__ == '__main__':
 
     logger.info("Refinement endpoints loaded")
 
+
+if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--port', type=int, default=5000, help='Port to listen on')
     args = parser.parse_args()
