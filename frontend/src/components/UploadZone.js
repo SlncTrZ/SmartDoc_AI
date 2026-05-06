@@ -9,6 +9,7 @@ class UploadZone extends React.Component {
             mode: props.operationMode || 'hybrid',
             files: [],
             processing: false,
+            cancelled: false,
             progress: 0,
             status: '',
             processedFiles: [],
@@ -17,6 +18,7 @@ class UploadZone extends React.Component {
             googleLoggedIn: false,
         };
         this.fileInputRef = React.createRef();
+        this.abortController = null;
     }
 
     openWebView(url) {
@@ -41,6 +43,18 @@ class UploadZone extends React.Component {
         this.handleFiles(Array.from(e.target.files));
     }
 
+    handleCancel() {
+        this.setState({ cancelled: true });
+        if (this.abortController) {
+            this.abortController.abort();
+        }
+        if (this.state.mode === 'hybrid' && this.state.files.length > 0) {
+            this.state.files.forEach(f => {
+                ApiService.cancelProcess(f.path || f.name);
+            });
+        }
+    }
+
     async handleFiles(files) {
         const pdfFiles = files.filter(f => f.type === 'application/pdf');
         if (pdfFiles.length === 0) {
@@ -48,9 +62,13 @@ class UploadZone extends React.Component {
             return;
         }
 
-        this.setState({ files: pdfFiles, error: null, processedFiles: [] });
+        this.setState({ files: pdfFiles, error: null, processedFiles: [], cancelled: false });
+        this.abortController = new AbortController();
+        const signal = this.abortController.signal;
 
         for (let i = 0; i < pdfFiles.length; i++) {
+            if (this.state.cancelled) break;
+
             const file = pdfFiles[i];
             this.setState({
                 processing: true,
@@ -61,14 +79,14 @@ class UploadZone extends React.Component {
             try {
                 const filePath = file.path || file.name;
                 const useCloud = this.state.mode === 'hybrid';
+                const label = useCloud ? 'Máy lọc Cloud' : 'Local';
+                this.setState({ status: `${i + 1}/${pdfFiles.length}: Đang xử lý ${label}...` });
 
-                if (useCloud) {
-                    this.setState({ status: `${i + 1}/${pdfFiles.length}: Đang tải lên Máy lọc Cloud...` });
-                } else {
-                    this.setState({ status: `${i + 1}/${pdfFiles.length}: Đang xử lý Local...` });
-                }
-
-                const result = await ApiService.processFile(filePath, { method: useCloud ? 'cloud' : 'local' });
+                const result = await ApiService.processFile(
+                    filePath,
+                    { method: useCloud ? 'cloud' : 'local' },
+                    signal
+                );
 
                 this.setState(prevState => ({
                     processedFiles: [...prevState.processedFiles, {
@@ -86,6 +104,14 @@ class UploadZone extends React.Component {
                     filePath: filePath,
                 });
             } catch (error) {
+                if (error.name === 'AbortError') {
+                    this.setState({
+                        cancelled: false,
+                        status: 'Đã huỷ',
+                        error: 'Người dùng đã huỷ xử lý',
+                    });
+                    break;
+                }
                 this.setState(prevState => ({
                     processedFiles: [...prevState.processedFiles, {
                         filename: file.name, success: false, error: error.message
@@ -95,7 +121,8 @@ class UploadZone extends React.Component {
             }
         }
 
-        this.setState({ processing: false, progress: 100 });
+        this.abortController = null;
+        this.setState({ processing: false, cancelled: false, progress: 100 });
     }
 
     handleGoogleLogin(session) {
@@ -198,7 +225,13 @@ class UploadZone extends React.Component {
                                 <div className="h-full rounded-full bg-gradient-to-r from-primary-500 to-accent-500 transition-all duration-500"
                                     style={{ width: progress + '%' }} />
                             </div>
-                            <p className="text-xs text-gray-400">{Math.round(progress)}%</p>
+                            <div className="flex items-center justify-between">
+                                <p className="text-xs text-gray-400">{Math.round(progress)}%</p>
+                                <button onClick={() => this.handleCancel()}
+                                    className="px-3 py-1 rounded-lg text-xs font-medium bg-red-50 text-red-600 hover:bg-red-100 border border-red-200 transition-all active:scale-95">
+                                    {'\u2715'} Huỷ
+                                </button>
+                            </div>
                         </div>
                     )}
                 </div>

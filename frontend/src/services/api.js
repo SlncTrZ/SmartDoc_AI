@@ -37,14 +37,15 @@ class ApiService {
      * Process a document file
      * @param {string} filePath - Full path to the file
      */
-    async processFile(filePath) {
+    async processFile(filePath, options = {}, signal = null) {
         try {
             const response = await fetch(`${this.baseUrl}/process`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ file_path: filePath }),
+                body: JSON.stringify({ file_path: filePath, ...options }),
+                signal,
             });
 
             const data = await response.json();
@@ -55,9 +56,20 @@ class ApiService {
 
             return data;
         } catch (error) {
+            if (error.name === 'AbortError') throw error;
             console.error('File processing failed:', error);
             throw error;
         }
+    }
+
+    async cancelProcess(filePath) {
+        try {
+            await fetch(`${this.baseUrl}/process/cancel`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ file_path: filePath }),
+            });
+        } catch {}
     }
 
     /**

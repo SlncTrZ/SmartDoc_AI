@@ -50,6 +50,9 @@ bridge = BridgeManager()
 # Chat provider: 'ollama' or 'ds2api'
 chat_provider = "ollama"
 
+# Cancel tracking for long-running processes
+cancel_requests = {}
+
 # Initialize other services
 metadata_extractor = MetadataExtractor(ollama)
 document_refiner = DocumentRefiner(ollama)
@@ -170,6 +173,24 @@ def process_file():
         tb = traceback.format_exc()
         logger.error(f"Processing error: {e}\n{tb}")
         return jsonify({'error': str(e) or 'Unknown error'}), 500
+
+
+@app.route('/api/process/cancel', methods=['POST'])
+def cancel_process():
+    """Cancel a running document process."""
+    data = request.json
+    file_path = data.get('file_path', '')
+    cancel_requests[file_path] = True
+    logger.info(f"Cancel requested for: {file_path}")
+    return jsonify({'success': True, 'cancelled': file_path})
+
+
+@app.route('/api/process/status', methods=['POST'])
+def process_status():
+    """Check if processing was cancelled."""
+    data = request.json
+    file_path = data.get('file_path', '')
+    return jsonify({'cancelled': cancel_requests.pop(file_path, False)})
 
 
 @app.route('/api/wings', methods=['GET'])
