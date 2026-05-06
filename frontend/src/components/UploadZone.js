@@ -133,6 +133,10 @@ class UploadZone extends React.Component {
         this.setState({ processing: false, cancelled: false, progress: 100 });
     }
 
+    setMode(mode) {
+        this.setState({ mode });
+    }
+
     handleGoogleLogin(session) {
         this.setState({ googleLoggedIn: !!session?.cookies?.length });
     }
@@ -166,11 +170,10 @@ class UploadZone extends React.Component {
                 )}
 
                 {/* Mode Toggle */}
-                {this.props.onModeToggle && (
-                    <div className="mb-4 flex flex-wrap items-center gap-2 p-3 bg-gray-50 rounded-xl border border-gray-200">
-                        <span className="text-sm text-gray-600">{'\u2699\uFE0F'} Phương thức:</span>
-                        {Object.entries(MODE_CONFIG).map(([key, cfg]) => (
-                            <button key={key} onClick={() => this.props.onModeToggle(key)}
+                <div className="mb-4 flex flex-wrap items-center gap-2 p-3 bg-gray-50 rounded-xl border border-gray-200">
+                    <span className="text-sm text-gray-600">{'\u2699\uFE0F'} Phương thức:</span>
+                    {Object.entries(MODE_CONFIG).map(([key, cfg]) => (
+                        <button key={key} onClick={() => this.setState({ mode: key })}
                                 className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
                                     mode === key
                                         ? 'bg-primary-600 text-white shadow-sm'
@@ -180,7 +183,6 @@ class UploadZone extends React.Component {
                             </button>
                         ))}
                     </div>
-                )}
 
                 {error && (
                     <div className="mb-4 p-3.5 bg-red-50 border border-red-200 rounded-xl flex items-start gap-3 animate-slide-up">
