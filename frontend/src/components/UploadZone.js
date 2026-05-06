@@ -1,5 +1,6 @@
 const React = require('react');
 const ApiService = require('../services/api').default;
+const WebViewLogin = require('./WebViewLogin').default;
 
 class UploadZone extends React.Component {
     constructor(props) {
@@ -13,8 +14,8 @@ class UploadZone extends React.Component {
             status: '',
             processedFiles: [],
             error: null,
-            showWebView: false,
-            webViewUrl: '',
+            showLogin: false,
+            googleLoggedIn: false,
         };
         this.fileInputRef = React.createRef();
     }
@@ -98,8 +99,12 @@ class UploadZone extends React.Component {
         this.setState({ processing: false, progress: 100 });
     }
 
+    handleGoogleLogin(session) {
+        this.setState({ googleLoggedIn: !!session?.cookies?.length });
+    }
+
     render() {
-        const { isDragging, mode, files, processing, progress, status, error, processedFiles, showWebView, webViewUrl } = this.state;
+        const { isDragging, mode, files, processing, progress, status, error, processedFiles, showLogin, googleLoggedIn } = this.state;
 
         const processIcon = mode === 'hybrid' ? '\u2601\uFE0F' : '\u{1F5A8}\uFE0F';
         const processLabel = mode === 'hybrid'
@@ -114,6 +119,20 @@ class UploadZone extends React.Component {
                     </h2>
                     <p className="text-sm text-gray-500 mt-1">Chế độ: {processLabel}</p>
                 </div>
+
+                {/* Google Login for NotebookLM */}
+                {mode === 'hybrid' && (
+                    <div className="mb-4">
+                        <WebViewLogin
+                            service="Google"
+                            icon={'\u{1FF7}\uFE0F'}
+                            loginUrl="https://accounts.google.com"
+                            onLogin={(s) => this.handleGoogleLogin(s)}
+                            onLogout={() => this.setState({ googleLoggedIn: false })}
+                            compact
+                        />
+                    </div>
+                )}
 
                 {/* Mode Toggle */}
                 {this.props.onModeToggle && (
@@ -224,15 +243,16 @@ class UploadZone extends React.Component {
                     </div>
                 )}
 
-                {/* WebView (dev fallback) */}
-                {showWebView && (
-                    <div className="fixed inset-0 z-50 bg-white">
-                        <div className="flex items-center justify-between p-2 bg-gray-100 border-b">
-                            <span className="text-sm font-medium">{'\u{1F310}'} Đăng nhập</span>
-                            <button onClick={() => this.setState({ showWebView: false })}
-                                className="px-3 py-1 text-sm bg-red-500 text-white rounded-lg">{'\u2715'} Đóng</button>
-                        </div>
-                        <iframe src={webViewUrl} className="w-full h-[calc(100vh-44px)]" />
+                {/* Login Status */}
+                {mode === 'hybrid' && !googleLoggedIn && (
+                    <div className="mt-4">
+                        <WebViewLogin
+                            service="Google"
+                            icon={'\u{1F310}'}
+                            loginUrl="https://accounts.google.com"
+                            onLogin={(s) => this.handleGoogleLogin(s)}
+                            onLogout={() => this.setState({ googleLoggedIn: false })}
+                        />
                     </div>
                 )}
             </div>

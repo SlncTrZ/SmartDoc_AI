@@ -1,13 +1,3 @@
-/**
- * Frontend: Preload Script — Expose safe APIs to renderer process.
- *
- * Provides IPC bridge for sidecar management, file dialogs, dynamic ports.
- *
- * Wing: smartdoc_frontend
- * Topic: electron_security
- * Last Updated: 2026-05-06
- */
-
 const { contextBridge, ipcRenderer } = require('electron');
 
 contextBridge.exposeInMainWorld('electronAPI', {
@@ -17,4 +7,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
     getSidecarStatus: () => ipcRenderer.invoke('sidecar-status'),
     sidecarHealth: (name) => ipcRenderer.invoke('sidecar-health', name),
     sidecarStop: (name) => ipcRenderer.invoke('sidecar-stop', name),
+
+    // WebView Login
+    openLoginWindow: (opts) => ipcRenderer.invoke('open-login-window', opts),
+    getLoginSession: (service) => ipcRenderer.invoke('get-login-session', service),
+    clearLoginSession: (service) => ipcRenderer.invoke('clear-login-session', service),
 });

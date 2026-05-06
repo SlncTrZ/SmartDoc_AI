@@ -1,5 +1,6 @@
 const React = require('react');
 const ApiService = require('../services/api').default;
+const WebViewLogin = require('./WebViewLogin').default;
 
 class TabRag extends React.Component {
     constructor(props) {
@@ -10,9 +11,10 @@ class TabRag extends React.Component {
             loading: false,
             selectedWings: [],
             wings: [],
-            error: null,
             ds2apiAvailable: false,
             chatProvider: 'ollama',
+            ds2apiLoggedIn: false,
+            error: null,
         };
         this.messagesEndRef = React.createRef();
     }
@@ -24,10 +26,20 @@ class TabRag extends React.Component {
                 ApiService.getDs2apiStatus(),
                 ApiService.getChatProvider(),
             ]);
+
+            let ds2apiLoggedIn = false;
+            if (window.electronAPI) {
+                try {
+                    const session = await window.electronAPI.getLoginSession('DeepSeek');
+                    ds2apiLoggedIn = !!session?.cookies?.length;
+                } catch {}
+            }
+
             this.setState({
                 wings,
                 ds2apiAvailable: ds2apiStatus.available,
                 chatProvider: provider.provider,
+                ds2apiLoggedIn,
             });
         } catch (error) {
             console.error('Failed to load initial data:', error);
@@ -85,7 +97,7 @@ class TabRag extends React.Component {
     dismissError() { this.setState({ error: null }); }
 
     render() {
-        const { messages, inputMessage, loading, wings, selectedWings, error, ds2apiAvailable, chatProvider } = this.state;
+        const { messages, inputMessage, loading, wings, selectedWings, error, ds2apiAvailable, chatProvider, ds2apiLoggedIn } = this.state;
 
         return (
             <div className="flex flex-col h-full bg-gray-50/50">
@@ -98,17 +110,23 @@ class TabRag extends React.Component {
                     }`}>
                         {chatProvider === 'ds2api' ? '\u{1F310} ds2api' : '\u{1F5A8} Ollama'}
                     </span>
-                    {ds2apiAvailable && chatProvider === 'ollama' && (
-                        <button onClick={async () => {
-                            await ApiService.setChatProvider('ds2api');
-                            this.setState({ chatProvider: 'ds2api' });
-                        }} className="text-[10px] text-violet-500 hover:text-violet-700 underline">Chuy\u1EC3n sang ds2api</button>
-                    )}
                     {chatProvider === 'ds2api' && (
-                        <button onClick={async () => {
-                            await ApiService.setChatProvider('ollama');
-                            this.setState({ chatProvider: 'ollama' });
-                        }} className="text-[10px] text-emerald-500 hover:text-emerald-700 underline">Chuy\u1EC3n sang Ollama</button>
+                        <WebViewLogin
+                            service="DeepSeek"
+                            loginUrl="https://chat.deepseek.com"
+                            compact
+                            onLogin={() => this.setState({ ds2apiLoggedIn: true })}
+                            onLogout={() => this.setState({ ds2apiLoggedIn: false })}
+                        />
+                    )}
+                    {!ds2apiAvailable && chatProvider === 'ollama' && (
+                        <WebViewLogin
+                            service="DeepSeek"
+                            loginUrl="https://chat.deepseek.com"
+                            compact
+                            onLogin={() => this.setState({ ds2apiLoggedIn: true })}
+                            onLogout={() => this.setState({ ds2apiLoggedIn: false })}
+                        />
                     )}
                     <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider ml-2">{'\u{1F3F7}\uFE0F'} Lọc:</span>
                     <div className="flex flex-wrap gap-1.5">

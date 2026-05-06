@@ -9,13 +9,23 @@
  * Last Updated: 2026-05-06
  */
 
-const { app, BrowserWindow, ipcMain } = require('electron');
+const { app, BrowserWindow, ipcMain, session } = require('electron');
 const path = require('path');
+const fs = require('fs');
 const SidecarManager = require('./src/main/sidecar-manager');
 
 let mainWindow = null;
 let sidecar = null;
 let backendPort = null;
+let loginWindow = null;
+
+const SESSION_DIR = path.join(app.getPath('userData'), 'sessions');
+
+function ensureSessionDir() {
+    if (!fs.existsSync(SESSION_DIR)) {
+        fs.mkdirSync(SESSION_DIR, { recursive: true });
+    }
+}
 
 function createWindow() {
     mainWindow = new BrowserWindow({
@@ -87,6 +97,104 @@ function setupSidecar() {
             return result.filePaths;
         }
         return [];
+    });
+
+    // ─── WebView Login ───
+    ipcMain.handle('open-login-window', async (_event, { url, service, width = 800, height = 700 }) => {
+        ensureSessionDir();
+
+        return new Promise((resolve) => {
+            if (loginWindow) {
+                loginWindow.close();
+            }
+
+            loginWindow = new BrowserWindow({
+                width,
+                height,
+                title: `Đăng nhập ${service}`,
+                webPreferences: {
+                    nodeIntegration: false,
+                    contextIsolation: true,
+                    webSecurity: false,
+                },
+                parent: mainWindow,
+                modal: true,
+                show: false,
+                backgroundColor: '#ffffff',
+            });
+
+            const sessionPath = path.join(SESSION_DIR, `${service.toLowerCase().replace(/\s+/g, '_')}.json`);
+            let navigated = false;
+
+            loginWindow.webContents.on('did-navigate', async () => {
+                navigated = true;
+            });
+
+            loginWindow.webContents.on('did-navigate-in-page', async () => {
+                navigated = true;
+            });
+
+            const tryExtractCookies = async () => {
+                try {
+                    const cookies = await loginWindow.webContents.session.cookies.get({});
+                    const loginUrl = loginWindow.webContents.getURL();
+
+                    const sessionData = {
+                        service,
+                        url: loginUrl,
+                        cookies,
+                        timestamp: Date.now(),
+                    };
+
+                    fs.writeFileSync(sessionPath, JSON.stringify(sessionData, null, 2));
+                    return sessionData;
+                } catch {
+                    return null;
+                }
+            };
+
+            loginWindow.on('close', async () => {
+                const sessionData = await tryExtractCookies();
+                loginWindow = null;
+                resolve(sessionData || { service, cookies: [], url: '' });
+            });
+
+            loginWindow.loadURL(url);
+            loginWindow.once('ready-to-show', () => {
+                loginWindow.show();
+            });
+
+            setTimeout(async () => {
+                if (loginWindow && !navigated) {
+                    const sessionData = await tryExtractCookies();
+                    if (sessionData && sessionData.cookies.length > 0) {
+                        loginWindow.close();
+                    }
+                }
+            }, 60000);
+        });
+    });
+
+    ipcMain.handle('get-login-session', async (_event, service) => {
+        ensureSessionDir();
+        const sessionPath = path.join(SESSION_DIR, `${service.toLowerCase().replace(/\s+/g, '_')}.json`);
+        try {
+            const data = fs.readFileSync(sessionPath, 'utf-8');
+            return JSON.parse(data);
+        } catch {
+            return null;
+        }
+    });
+
+    ipcMain.handle('clear-login-session', async (_event, service) => {
+        ensureSessionDir();
+        const sessionPath = path.join(SESSION_DIR, `${service.toLowerCase().replace(/\s+/g, '_')}.json`);
+        try {
+            fs.unlinkSync(sessionPath);
+            return true;
+        } catch {
+            return false;
+        }
     });
 }
 
