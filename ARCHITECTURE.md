@@ -1,30 +1,66 @@
-# ARCHITECTURE - AI Document Standardizer & RAG
+﻿# ARCHITECTURE - SmartDoc AI Hybrid + Sidecar
 
-## 1. Tổng quan hệ thống
-Hệ thống được thiết kế theo mô hình **Local-first**, đảm bảo bảo mật dữ liệu nội bộ công ty. Ứng dụng chạy độc lập trên Desktop, không yêu cầu kỹ năng CLI.
+## 1. Tổng quan
+Modular Hybrid: tự động điều chỉnh luồng xử lý dựa trên phần cứng.
+Dùng Sidecar Processes (Python) chạy local cùng Electron - không phụ thuộc server ngoài.
 
-## 2. Các thành phần chính (Tech Stack)
-*   **Frontend**: Electron.js (UI/UX thân thiện, đóng gói .exe).
-*   **Core Engine (Python Sidecar)**: 
-    *   **Docling (IBM)**: Trích xuất PDF/DOCX sang Markdown (giữ nguyên layout/table).
-    *   **LanceDB**: Vector Database dạng Serverless (lưu trữ cục bộ dưới dạng file).
-*   **AI Orchestrator**: Ollama (chạy Local API tại port 11434).
-    *   *Models đề xuất*: Llama 3.2 (3B) cho xử lý ngôn ngữ, Moondream2 cho Vision, mxbai-embed-large cho Embedding.
+## 2. Kiến trúc
 
-## 3. Luồng dữ liệu (Data Pipeline)
-1. **Input**: User chọn Folder/File thông qua giao diện Electron.
-2. **Processing (On-demand)**: 
-   - Electron gọi Python Sidecar thực thi Docling.
-   - Trích xuất nội dung sang định dạng Markdown chuẩn.
-3. **Structuring**: 
-   - Ollama đọc lướt Markdown để trích xuất Metadata (Tiêu đề, Tác giả, Loại tài liệu).
-   - Metadata được gán vào Header của file .md.
-4. **Vectorization & Storage**:
-   - Chuyển Markdown thành Vector qua Embedding Model.
-   - Lưu đồng thời vào LanceDB (chia theo các "Wings" - phân loại tài liệu).
-5. **RAG (Retrieval-Augmented Generation)**:
-   - Người dùng đặt câu hỏi -> Search Vector trong LanceDB -> Gửi Context vào Ollama -> Trả lời kết quả.
+`
+┌─────────────────────────────────────────────────────────┐
+│                    SmartDoc AI (Electron)                  │
+├─────────────────────────────────────────────────────────┤
+│                                                          │
+│  ┌──────────────┐    ┌──────────────────────────────┐    │
+│  │  Splash       │───▶│  Hardware Detection           │    │
+│  │  Screen       │    │  GPU >= 6GB -> Local Ollama    │    │
+│  │  (GPU/VRAM)   │    │  No GPU -> Hybrid Mode        │    │
+│  └──────────────┘    └──────────┬───────────────────┘    │
+│                                ▼                         │
+│                   ┌─────────────────────┐                │
+│                   │  Hybrid Dashboard    │                │
+│                   └─────────┬───────────┘                │
+│                            │                             │
+│         ┌──────────────────┴──────────────────┐          │
+│         ▼                                     ▼          │
+│  ┌──────────────┐                      ┌──────────────┐  │
+│  │ [B] Upload   │                      │ [A] Chat     │  │
+│  │ Custom UI    │                      │ ds2api       │  │
+│  │ -> WebView ẩn│                      │ -> WebView ẩn│  │
+│  │ -> Login     │                      │ -> Login     │  │
+│  │   Google     │                      │   DeepSeek   │  │
+│  │ -> NotebookLM│                      │ -> Context   │  │
+│  │ -> Export .md│                      │   LanceDB    │  │
+│  └──────┬───────┘                      └──────┬───────┘  │
+│         │                                     │         │
+│         ▼                                     │         │
+│  ┌──────────────┐                             │         │
+│  │ LanceDB      │◀────────────────────────────┘         │
+│  │ (Vector DB)  │  Context cho RAG Chat                  │
+│  │ + Docling    │                                       │
+│  │ (Fallback)   │                                       │
+│  └──────────────┘                                       │
+└─────────────────────────────────────────────────────────┘
+`
 
-## 4. Quản lý Ollama
-- App khởi động -> Check cổng 11434.
-- Nếu không phản hồi -> Gửi lệnh hệ thống (`child_process`) để khởi chạy Ollama App/Service.
+## 3. Sidecar Processes
+Chạy local cùng Electron, spawn bằng child_process.spawn (main process).
+
+| Process | Công nghệ | Chức năng |
+|---------|-----------|-----------|
+| ds2api | Python | LLM Inference qua DeepSeek Web |
+| notebooklm-mcp | CLI + Playwright + Chromium | PDF -> Markdown chuẩn |
+| Docling (fallback) | Python + Model weights | OCR local khi offline |
+| Ollama | Go binary | Local LLM (chỉ khi GPU >= 6GB) |
+
+## 4. Luồng dữ liệu
+1. Upload (Hybrid): User chọn file -> WebView ẩn -> notebookLM export .md -> lưu LanceDB
+2. Upload (Local): User chọn file -> Docling OCR -> Markdown -> lưu LanceDB
+3. Chat: User hỏi -> LanceDB search context -> ds2api + context -> trả lời
+4. Fallback: notebookLM lỗi -> tự động chuyển Docling. ds2api lỗi -> chuyển Ollama
+
+## 5. Công nghệ
+- Frontend: Electron 30 + React 18 + Tailwind CSS + WebView
+- Backend: Python Flask + LanceDB + ds2api + notebooklm-mcp + Docling
+- Đóng gói: Electron-Builder + bundle Python runtime + portable Chromium
+- Model weights: On-demand download (~2GB, chỉ khi Local Mode)

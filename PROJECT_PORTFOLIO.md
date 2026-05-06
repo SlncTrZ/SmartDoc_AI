@@ -1,23 +1,37 @@
-# PROJECT PORTFOLIO: SmartDoc AI
+﻿# PROJECT PORTFOLIO: SmartDoc AI (Hybrid + Sidecar Edition)
 
 ## 1. Giới thiệu
-**SmartDoc AI** là giải pháp quản trị tri thức nội bộ dành riêng cho doanh nghiệp quy mô vừa. Ứng dụng giúp số hóa hàng ngàn tài liệu PDF, DOCX thành hệ thống dữ liệu thông minh có khả năng hỏi đáp, tìm kiếm bằng ngôn ngữ tự nhiên.
+SmartDoc AI - giải pháp quản trị tri thức nội bộ cho doanh nghiệp.
+Adaptive AI, tự động điều chỉnh luồng xử lý dựa trên phần cứng người dùng.
+Chạy tốt trên cả máy tính văn phòng không GPU lẫn máy trạm cao cấp.
 
 ## 2. Vấn đề giải quyết
-*   **Quá tải tài liệu**: Nhân viên mất quá nhiều thời gian tìm kiếm thông tin trong các tệp PDF cũ.
-*   **Rào cản công nghệ**: Nhân viên văn phòng không biết sử dụng các công cụ AI phức tạp (Python, Terminal).
-*   **Bảo mật**: Dữ liệu công ty không được phép tải lên các dịch vụ Cloud AI công cộng.
+- Phần cứng không đồng nhất: Máy văn phòng thường không GPU.
+- Chi phí API: Giải pháp Cloud chính thống tốn kém.
+- Bảo mật & Tiện ích: Cân bằng giữa Local (bảo mật) và Cloud (sức mạnh AI).
+- Rào cản số lượng: Document processing không giới hạn nhờ notebookLM.
 
-## 3. Tính năng nổi bật
-*   **Cài đặt 1-Click**: Không cần cài đặt môi trường, chạy trực tiếp trên Windows.
-*   **Chuẩn hóa tự động**: Chuyển đổi tài liệu lộn xộn thành định dạng Markdown chuyên nghiệp thông qua Docling.
-*   **Trí tuệ nhân tạo Local**: Sử dụng Ollama chạy trực tiếp trên máy tính công ty, không mất phí API, không lộ dữ liệu.
-*   **Tìm kiếm ngữ nghĩa**: Tìm tài liệu theo ý nghĩa câu hỏi, không cần nhớ chính xác tên file.
+## 3. Kiến trúc
+Sidecar Architecture: Mọi AI service chạy local cùng Electron.
 
-## 4. Kết quả mong đợi
-*   Giảm 80% thời gian tra cứu tài liệu nghiệp vụ.
-*   100% nhân viên (kể cả người không am hiểu IT) có thể tiếp cận sức mạnh của AI.
-*   Xây dựng được kho lưu trữ tri thức số bền vững cho công ty.
+| Kênh | Công nghệ | Khi nào dùng |
+|------|-----------|-------------|
+| Hardware Check | GPUtil (Python) | Splash Screen đầu tiên |
+| LLM Chat | ds2api (Python) -> DeepSeek | Luôn dùng (Hybrid) |
+| Document Standardizer | notebookLM-mcp + Chromium | Có internet |
+| Document Fallback | Docling + Model weights | Offline / notebookLM lỗi |
+| Vector DB | LanceDB | Local storage |
+| Local LLM | Ollama | GPU >= 6GB |
 
-## 5. Đối tượng sử dụng
-*   Nhân viên hành chính, kế toán, nhân sự công ty quy mô ~100 người.
+## 4. Tính năng nổi bật
+- Hardware Setup Wizard: Auto-detect GPU/VRAM -> đề xuất chế độ
+- ds2api Integration: DeepSeek free qua tài khoản cá nhân
+- Cloud Standardizer: NotebookLM -> .md -> LanceDB
+- Docling Fallback: OCR local khi offline
+- On-demand Weights: Chỉ tải model 2GB khi cần Local Mode
+
+## 5. Kết quả mong đợi
+- 100% tương thích mọi cấu hình văn phòng
+- Giảm ~90% chi phí API AI
+- Xử lý không giới hạn số lượng tài liệu
+- Một .exe duy nhất, người dùng chỉ cần cài và chạy
