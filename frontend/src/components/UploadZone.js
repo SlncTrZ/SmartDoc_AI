@@ -50,18 +50,27 @@ class UploadZone extends React.Component {
     }
 
     handleCancel() {
-        this.setState({ cancelled: true });
+        this._cancelled = true;
         if (this.abortController) {
             this.abortController.abort();
+            this.abortController = null;
         }
-            if (this.state.mode === 'cloud' && this.state.files.length > 0) {
+        if (this.state.mode === 'cloud' && this.state.files.length > 0) {
             this.state.files.forEach(f => {
                 ApiService.cancelProcess(f.path || f.name);
             });
         }
+        this.setState({ cancelled: true, processing: false });
+    }
+
+    setMode(mode) {
+        if (this.state.processing) return;
+        this.setState({ mode, error: null, processedFiles: [], files: [] });
     }
 
     async handleFiles(files) {
+        this._cancelled = false;
+
         const pdfFiles = files.filter(f => f.type === 'application/pdf');
         if (pdfFiles.length === 0) {
             this.setState({ error: 'Vui lòng chọn file PDF' });
@@ -73,7 +82,7 @@ class UploadZone extends React.Component {
         const signal = this.abortController.signal;
 
         for (let i = 0; i < pdfFiles.length; i++) {
-            if (this.state.cancelled) break;
+            if (this._cancelled) break;
 
             const file = pdfFiles[i];
             this.setState({
@@ -134,7 +143,8 @@ class UploadZone extends React.Component {
     }
 
     setMode(mode) {
-        this.setState({ mode });
+        if (this.state.processing) return;
+        this.setState({ mode, error: null, processedFiles: [], files: [] });
     }
 
     handleGoogleLogin(session) {
@@ -173,15 +183,17 @@ class UploadZone extends React.Component {
                 <div className="mb-4 flex flex-wrap items-center gap-2 p-3 bg-gray-50 rounded-xl border border-gray-200">
                     <span className="text-sm text-gray-600">{'\u2699\uFE0F'} Phương thức:</span>
                     {Object.entries(MODE_CONFIG).map(([key, cfg]) => (
-                        <button key={key} onClick={() => this.setState({ mode: key })}
+                        <button key={key} onClick={() => this.setMode(key)}
+                                disabled={processing}
                                 className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                                    processing ? 'opacity-50 cursor-not-allowed' :
                                     mode === key
                                         ? 'bg-primary-600 text-white shadow-sm'
                                         : 'bg-white text-gray-600 border hover:bg-gray-100'
                                 }`}>
-                                {cfg.icon} {cfg.label}
-                            </button>
-                        ))}
+                            {cfg.icon} {cfg.label}
+                        </button>
+                    ))}
                     </div>
 
                 {error && (

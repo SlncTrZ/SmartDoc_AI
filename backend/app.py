@@ -102,6 +102,8 @@ def process_file():
         # Determine processing pipeline
         if method == 'cloud':
             logger.info(f"Processing via Cloud bridge: {file_path}")
+            if not bridge.notebooklm_available():
+                return jsonify({'error': 'NotebookLM chưa được cài đặt. Vào Settings → Install Bridge để cài đặt.'}), 400
             bridge_result = bridge.convert_document(file_path, prefer_cloud=True)
             if bridge_result['success']:
                 result = {
@@ -111,11 +113,7 @@ def process_file():
                     'images': None,
                 }
             else:
-                logger.warning(f"Cloud bridge failed, falling back to local: {bridge_result.get('error')}")
-                lp_result = light_processor.process(file_path, mode='auto')
-                result = lp_result if lp_result['success'] else processor.process_file(file_path, generate_images=False)
-                if result.get('success'):
-                    result['metadata'] = {'method': result.get('method', 'docling')}
+                return jsonify({'error': f'NotebookLM xử lý thất bại: {bridge_result.get("error", "Lỗi không xác định")}'}), 500
         elif method == 'enhanced':
             logger.info(f"Processing via Enhanced (Docling): {file_path}")
             dl_result = processor.process_file(file_path, generate_images=generate_images)
