@@ -95,7 +95,7 @@ class TabPreview extends React.Component {
 
     render() {
         const { documents, onDocumentSelect } = this.props;
-        const { selectedDoc, editing, title, date, author, wing, aiLoading, aiError, aiResponse, customInstruction } = this.state;
+        const { selectedDoc, editing, title, date, author, wing, aiLoading, aiError, aiResponse, customInstruction, aiProvider } = this.state;
 
         if (!selectedDoc) {
             return (
