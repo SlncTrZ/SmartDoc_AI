@@ -159,8 +159,6 @@ class App extends React.Component {
                 <main className="flex-1 overflow-auto">
                     {activeTab === 'input' && React.createElement(TabInput, {
                         onDocumentProcessed: (doc) => this.handleDocumentProcessed(doc),
-                        operationMode: operationMode,
-                        key: operationMode,
                     })}
                     {activeTab === 'preview' && React.createElement(TabPreview, {
                         document: currentDocument,
